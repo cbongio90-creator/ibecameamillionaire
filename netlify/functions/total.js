@@ -1,7 +1,11 @@
 const { getStore } = require("@netlify/blobs");
 
 exports.handler = async () => {
-  const store = getStore("donations");
+  const store = getStore({
+    name: "donations",
+    siteID: process.env.NETLIFY_SITE_ID,
+    token: process.env.NETLIFY_AUTH_TOKEN
+  });
 
   const total = await store.get("total");
   const count = await store.get("count");

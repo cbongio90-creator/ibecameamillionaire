@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thank you, legend — ibecomeamillionaire.com</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --felt:#0B3D2E; --felt-deep:#072A20;
+    --gold:#F2C14E; --gold-bright:#FFD978;
+    --paper:#FBF6E9; --ink:#10241C;
+    --hot:#E4572E; --hot-dark:#C43F1B;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--felt);
+    background-image:radial-gradient(ellipse 120% 70% at 50% -10%, #11503C 0%, var(--felt) 55%, var(--felt-deep) 100%);
+    color:var(--paper);font-family:'Inter',sans-serif;
+    min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    text-align:center;padding:32px 24px;overflow-x:hidden;
+  }
+  .stamp{
+    font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--gold);
+    border:2px solid var(--gold);border-radius:99px;
+    padding:8px 20px;margin-bottom:28px;
+    transform:rotate(-2deg);
+    animation:stampIn .5s cubic-bezier(.2,1.6,.4,1);
+  }
+  @keyframes stampIn{from{opacity:0;transform:rotate(-2deg) scale(1.6)}to{opacity:1;transform:rotate(-2deg) scale(1)}}
+  h1{
+    font-family:'Archivo Black',sans-serif;
+    font-size:clamp(32px,6vw,58px);line-height:1.06;
+    max-width:720px;margin-bottom:18px;
+  }
+  h1 em{font-style:normal;color:var(--gold-bright)}
+  .msg{font-size:clamp(15px,2vw,18px);opacity:.82;max-width:540px;line-height:1.65;margin-bottom:34px}
+  .msg strong{color:var(--gold-bright);font-weight:600}
+  .receipt{
+    font-family:'Space Mono',monospace;font-size:14px;
+    background:var(--ink);border:2px dashed var(--gold);
+    border-radius:14px;padding:18px 26px;margin-bottom:36px;
+    line-height:2;
+  }
+  .receipt .lbl{opacity:.6}
+  .receipt .val{color:var(--gold-bright);font-weight:700}
+  .actions{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-bottom:30px}
+  .btn{
+    font:700 16px 'Inter',sans-serif;border-radius:14px;
+    padding:15px 32px;cursor:pointer;text-decoration:none;
+    transition:transform .12s ease;display:inline-block;
+  }
+  .btn:hover{transform:translateY(-2px)}
+  .btn:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+  .btn-share{
+    color:#fff;border:0;
+    background:linear-gradient(180deg,var(--hot),var(--hot-dark));
+    box-shadow:0 10px 28px rgba(228,87,46,.4);
+  }
+  .btn-back{
+    color:var(--paper);background:rgba(0,0,0,.28);
+    border:2px solid rgba(251,246,233,.3);
+  }
+  .copied{
+    display:none;font-family:'Space Mono',monospace;
+    font-size:13px;color:var(--gold-bright);margin-bottom:24px;
+  }
+  .small{font-family:'Space Mono',monospace;font-size:12px;opacity:.5;line-height:1.8;max-width:420px}
+
+  /* coriandoli */
+  .confetti{position:fixed;top:-12px;border-radius:2px;pointer-events:none;z-index:9}
+  @keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.9}}
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    .confetti{display:none}
+  }
+</style>
+</head>
+<body>
+
+  <div class="stamp">Payment received ✓</div>
+
+  <h1>You beautiful,<br><em>irrational</em> human.</h1>
+
+  <p class="msg">
+    You just gave money to a complete stranger, for <strong>no reason at all</strong> —
+    and the number went up because of you. Somewhere out there, a very normal person
+    who woke up this morning and went to work is now slightly closer to a million.
+    That's the whole story. <strong>And you're officially part of it.</strong>
+  </p>
+
+  <!-- In produzione: importo e progresso arrivano dal backend
+       (Stripe/PayPal li passano nei parametri della pagina di successo,
+       es. thank-you.html?amount=5). -->
+  <div class="receipt">
+    <span class="lbl">Your contribution:</span> <span class="val" id="amount">€ 5.00</span><br>
+    <span class="lbl">Your role in history:</span> <span class="val">confirmed</span><br>
+    <span class="lbl">Regrets:</span> <span class="val">hopefully none</span>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-share" onclick="share()">Tell someone about this madness</button>
+    <a class="btn btn-back" href="./i-become-a-millionaire.html">Back to the number</a>
+  </div>
+  <p class="copied" id="copied">✓ Link copied — go spread the absurdity.</p>
+
+  <p class="small">
+    The counter updates live. If your donation isn't showing yet, give it a few seconds —
+    even history takes a moment to load. See you at € 1,000,000. 👀
+  </p>
+
+<script>
+  /* importo dinamico dal parametro URL (?amount=5) — Stripe/PayPal possono passarlo */
+  const params = new URLSearchParams(location.search);
+  const amt = parseFloat(params.get('amount'));
+  if(!isNaN(amt) && amt > 0){
+    document.getElementById('amount').textContent =
+      '€ ' + amt.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+
+  /* condivisione: Web Share API su mobile, copia link su desktop */
+  function share(){
+    const data = {
+      title: 'I become a millionaire',
+      text: "I just donated to help a total stranger become a millionaire. For no reason. Watch the number go up:",
+      url: 'https://ibecomeamillionaire.com'
+    };
+    if(navigator.share){
+      navigator.share(data).catch(()=>{});
+    } else {
+      navigator.clipboard.writeText(data.text + ' ' + data.url).then(()=>{
+        document.getElementById('copied').style.display = 'block';
+      });
+    }
+  }
+
+  /* coriandoli dorati alla apertura */
+  const colors = ['#F2C14E','#FFD978','#FBF6E9','#E4572E'];
+  for(let i=0;i<60;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    const s = 6 + Math.random()*8;
+    c.style.cssText = `left:${Math.random()*100}vw;width:${s}px;height:${s*0.5}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation:fall ${2.5+Math.random()*2.5}s linear ${Math.random()*1.2}s forwards;opacity:0`;
+    document.body.appendChild(c);
+  }
+</script>
+</body>
+</html>

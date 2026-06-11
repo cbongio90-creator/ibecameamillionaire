@@ -17,7 +17,11 @@ exports.handler = async (event) => {
       ? session.amount_total / 100
       : 0;
 
-    const store = getStore("donations");
+    const store = getStore({
+  name: "donations",
+  siteID: process.env.NETLIFY_SITE_ID,
+  token: process.env.NETLIFY_AUTH_TOKEN
+});
 
     const currentTotal = Number(await store.get("total") || 0);
     const currentCount = Number(await store.get("count") || 0);

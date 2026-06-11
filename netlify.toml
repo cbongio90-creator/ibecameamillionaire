@@ -1,12 +1,3 @@
-# netlify.toml — configurazione del sito su Netlify
-# Va nella RADICE del progetto (accanto a index.html)
-
-# Fa funzionare l'indirizzo /api/total (quello che la pagina chiama)
-# reindirizzandolo alla Netlify Function
-[[redirects]]
-  from = "/api/total"
-  to = "/.netlify/functions/total"
-  status = 200
-
-[functions]
-  directory = "netlify/functions"
+[build]
+  command = ""
+  publish = "."

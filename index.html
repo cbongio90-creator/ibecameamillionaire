@@ -467,6 +467,37 @@ function setLang(l){
 setLang('en');
 fetchTotal();
 </script>
+  <!-- ===== Pulsante "torna su" + reset scroll al refresh ===== -->
+<style>
+  .to-top{
+    position:fixed;bottom:24px;right:24px;z-index:99;
+    width:48px;height:48px;border-radius:50%;
+    border:2px solid var(--gold);background:var(--ink);color:var(--gold-bright);
+    font:700 20px 'Space Mono',monospace;cursor:pointer;
+    opacity:0;pointer-events:none;transform:translateY(8px);
+    transition:opacity .25s ease,transform .25s ease;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);
+  }
+  .to-top.show{opacity:1;pointer-events:auto;transform:none}
+  .to-top:hover{background:rgba(242,193,78,.15)}
+  .to-top:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+</style>
+<button class="to-top" id="to-top" aria-label="Torna su" title="Torna su">↑</button>
+<script>
+(function(){
+  var btn = document.getElementById('to-top');
+  // appare solo dopo aver scrollato un po'
+  window.addEventListener('scroll', function(){
+    btn.classList.toggle('show', window.scrollY > 400);
+  }, {passive:true});
+  btn.addEventListener('click', function(){
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+  // al refresh la pagina riparte sempre dall'alto
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.scrollTo({top:0, left:0, behavior:'instant'});
+})();
+</script>
 </body>
 </html>
 

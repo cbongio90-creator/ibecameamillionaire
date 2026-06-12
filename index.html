@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ibecameamillionaire.com — Help me become a millionaire</title>
+<title>ibecameamillionaire.com — Help me became a millionaire</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -177,6 +177,25 @@
     color:var(--gold-bright);margin-top:14px;
   }
 
+  /* ---------- fee line + lista completa + verifica ---------- */
+  .fee-line{margin-top:10px;font-size:12px;opacity:.7;letter-spacing:.02em}
+  .feed-list li .who{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .feed-list li .who .t{font-family:'Space Mono',monospace;font-size:11px;opacity:.5}
+  .feed-more{
+    display:block;margin:14px auto 0;
+    font:700 13px 'Space Mono',monospace;color:var(--gold);
+    background:transparent;border:1px solid rgba(242,193,78,.4);
+    border-radius:99px;padding:8px 20px;cursor:pointer;
+    transition:background .12s ease;
+  }
+  .feed-more:hover{background:rgba(242,193,78,.12)}
+  .feed-more:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .feed-verify{
+    margin-top:16px;text-align:center;font-family:'Space Mono',monospace;
+    font-size:11px;opacity:.55;line-height:1.7;
+  }
+  .feed-verify a{color:var(--gold)}
+
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{animation:none!important;transition:none!important}
   }
@@ -185,7 +204,7 @@
 <body>
 
 <header>
-  <div class="logo" id="logo">IBECAMEAMILLIONAIRE.COM<span data-i18n="tagline">an honestly absurd social experiment</span></div>
+  <div class="logo" id="logo">IbecameAMILLIONAIRE.COM<span data-i18n="tagline">an honestly absurd social experiment</span></div>
 </header>
 
 <main class="hero">
@@ -201,6 +220,7 @@
         <div class="progress-fill" id="pbar"></div>
       </div>
       <div class="goal-text" id="goal-text"></div>
+      <div class="fee-line mono" id="fee-line" hidden></div>
     </div>
   </div>
 
@@ -221,6 +241,8 @@
   <section class="feed">
     <h2 data-i18n="feedTitle">Ultime donazioni</h2>
     <ul class="feed-list" id="feed"></ul>
+    <button class="feed-more" id="feed-more" hidden type="button"></button>
+    <p class="feed-verify"><span data-i18n="verify">Data is generated automatically from Stripe payments — no one edits it by hand. Check for yourself:</span> <a href="/api/total" target="_blank" rel="noopener">/api/total</a></p>
   </section>
 
   <section class="why">
@@ -272,30 +294,40 @@ const i18n = {
     sub:"Nessuna causa nobile. Nessuna startup. Solo una persona normale che chiede a internet 1€ alla volta. Tu doni, il numero sale, tutti guardiamo cosa succede.",
     raised:"Raccolti finora · in diretta",
     cta:"Dona e fai salire il numero",
-    micro:"Prototipo dimostrativo — i pagamenti qui sono simulati.",
-    feedTitle:"Ultime donazioni",
+    micro:"La tua email al checkout è il tuo posto in prima fila. Ogni donatore saprà cosa succede.",
+    feedTitle:"Tutte le donazioni",
+    verify:"Dati generati in automatico dai pagamenti Stripe — nessuno li ritocca a mano. Verifica tu stesso:",
+    fee:(c,f,n)=>`${c} donazion${c===1?'e':'i'} · commissioni Stripe € ${f} · netto € ${n}`,
+    showAll:(n)=>`Mostra tutte le ${n} donazioni`,
+    showLess:"Mostra meno",
+    now:"adesso", minAgo:(m)=>`${m} min fa`, hAgo:(h)=>`${h} h fa`,
     whyTitle:"Perché?",
     whyText:"Perché no. Internet ha finanziato un'insalata di patate e una homepage da un milione di pixel. Questo è ancora più semplice: la trasparenza totale è il punto. Vedrai ogni centesimo salire in tempo reale, e se mai arriveremo al traguardo, lo avremo fatto tutti insieme — per nessun motivo.",
     footer1:"Fatto con zero vergogna.",
     missing:(m)=>`Mancano € ${m} al milione`,
     donated:"ha donato",
-    anon:"Qualcuno"
+    anon:"Anonimo"
   },
   en: {
     tagline:"an honestly absurd social experiment",
     eyebrow:"Goal: € 1,000,000",
-    h1:"Help me become a millionaire.<br>Literally.",
+    h1:"Help me became a millionaire.<br>Literally.",
     sub:"No noble cause. No startup. Just a regular person asking the internet for €1 at a time. You donate, the number goes up, we all watch what happens.",
     raised:"Raised so far · live",
     cta:"Donate and make the number go up",
     micro:"Your checkout email = your front-row seat. Every donor gets told what happens.",
-    feedTitle:"Latest donations",
+    feedTitle:"All donations",
+    verify:"Data is generated automatically from Stripe payments — no one edits it by hand. Check for yourself:",
+    fee:(c,f,n)=>`${c} donation${c===1?'':'s'} · Stripe fees € ${f} · net € ${n}`,
+    showAll:(n)=>`Show all ${n} donations`,
+    showLess:"Show less",
+    now:"just now", minAgo:(m)=>`${m} min ago`, hAgo:(h)=>`${h} h ago`,
     whyTitle:"Why?",
     whyText:"Why not. The internet once funded a potato salad and a million-pixel homepage. This is even simpler: total transparency is the whole point. You'll watch every cent climb in real time, and if we ever hit the goal, we'll have done it together — for no reason at all.",
     footer1:"Made with zero shame.",
     missing:(m)=>`€ ${m} to go until one million`,
     donated:"donated",
-    anon:"Someone"
+    anon:"Anonymous"
   }
 };
 let lang = 'en';
@@ -328,42 +360,94 @@ function animateTo(target){
   requestAnimationFrame(step);
 }
 
-function addFeed(name, amount){
-  const ul = document.getElementById('feed');
-  const li = document.createElement('li');
-  const who = document.createElement('span');
-  who.textContent = '🚀 ' + (name || i18n[lang].anon) + ' ' + i18n[lang].donated;
-  const amt = document.createElement('span');
-  amt.className = 'amt';
-  amt.textContent = '€ ' + fmt(amount);
-  li.appendChild(who); li.appendChild(amt);
-  ul.prepend(li);
-  while(ul.children.length>5) ul.removeChild(ul.lastChild);
+/* ============ LISTA DONAZIONI (riepilogo completo) ============ */
+let allRecent = [];
+let feedExpanded = false;
+const FEED_COLLAPSED = 8; // voci visibili prima del bottone "mostra tutte"
+
+function timeAgo(iso){
+  if(!iso) return '';
+  const t = i18n[lang];
+  const s = Math.floor((Date.now() - new Date(iso).getTime())/1000);
+  if(s < 60) return t.now;
+  if(s < 3600) return t.minAgo(Math.floor(s/60));
+  if(s < 86400) return t.hAgo(Math.floor(s/3600));
+  return new Date(iso).toLocaleDateString(lang==='it'?'it-IT':'en-US',{day:'numeric',month:'short'});
 }
 
+function renderFeed(){
+  const ul = document.getElementById('feed');
+  ul.innerHTML = '';
+  const items = feedExpanded ? allRecent : allRecent.slice(0, FEED_COLLAPSED);
+  items.forEach(p=>{
+    const li = document.createElement('li');
+    const who = document.createElement('span');
+    who.className = 'who';
+    const n = document.createElement('span');
+    n.textContent = '🚀 ' + (p.name || i18n[lang].anon);
+    who.appendChild(n);
+    if(p.ts){
+      const tt = document.createElement('span');
+      tt.className = 't';
+      tt.textContent = timeAgo(p.ts);
+      who.appendChild(tt);
+    }
+    const amt = document.createElement('span');
+    amt.className = 'amt';
+    amt.textContent = '€ ' + fmt(p.amount);
+    li.appendChild(who); li.appendChild(amt);
+    ul.appendChild(li);
+  });
+  const btn = document.getElementById('feed-more');
+  if(allRecent.length > FEED_COLLAPSED){
+    btn.hidden = false;
+    btn.textContent = feedExpanded ? i18n[lang].showLess : i18n[lang].showAll(allRecent.length);
+  } else {
+    btn.hidden = true;
+  }
+}
+document.getElementById('feed-more').addEventListener('click', ()=>{
+  feedExpanded = !feedExpanded;
+  renderFeed();
+});
+
 /* ============ DATI REALI DA STRIPE ============
-   Chiede il totale al backend (/api/total) ogni 5 secondi.
-   Il backend legge i pagamenti direttamente dal tuo account Stripe. */
-let lastPaymentId = null;
+   Chiede tutto al backend (/api/total) ogni 5 secondi.
+   Contratto JSON atteso (importi in EURO, non centesimi):
+   {
+     "total": 123.45,            // lordo raccolto
+     "fees": 4.56,               // commissioni Stripe (opzionale)
+     "net": 118.89,              // netto (opzionale)
+     "count": 37,                // n. donazioni (opzionale)
+     "recent": [                 // riepilogo, più recente per prima
+       { "name": "Marco" | null, "amount": 2.00, "ts": "2026-06-12T14:32:00Z" }
+     ]
+   }
+   I campi opzionali assenti vengono semplicemente non mostrati. */
+let lastData = null;
+
+function applyData(d){
+  if(typeof d.total === 'number' && d.total !== total){
+    total = d.total;
+    animateTo(total);
+  }
+  const fl = document.getElementById('fee-line');
+  if(typeof d.fees === 'number' && typeof d.net === 'number'){
+    fl.hidden = false;
+    fl.textContent = i18n[lang].fee(d.count ?? '', fmt(d.fees), fmt(d.net));
+  }
+  if(Array.isArray(d.recent)){
+    allRecent = d.recent;
+    renderFeed();
+  }
+}
 
 async function fetchTotal(){
   try{
     const r = await fetch('/api/total');
     if(r.ok){
-      const d = await r.json();
-      if(typeof d.total === 'number' && d.total !== total){
-        total = d.total;
-        animateTo(total);
-      }
-      /* feed: ultime donazioni reali, col nome scelto al checkout o anonime */
-      if(Array.isArray(d.recent) && d.recent.length){
-        if(d.recent[0].id !== lastPaymentId){
-          const ul = document.getElementById('feed');
-          ul.innerHTML = '';
-          d.recent.slice(0,5).reverse().forEach(p => addFeed(p.name, p.amount));
-          lastPaymentId = d.recent[0].id;
-        }
-      }
+      lastData = await r.json();
+      applyData(lastData);
     }
   }catch(e){ /* backend non raggiungibile: il contatore resta fermo */ }
   setTimeout(fetchTotal, 5000);
@@ -377,6 +461,7 @@ function setLang(l){
   });
   document.documentElement.lang = l;
   render();
+  if(lastData) applyData(lastData); // ridisegna fee line e lista nella nuova lingua
 }
 
 setLang('en');
@@ -384,3 +469,4 @@ fetchTotal();
 </script>
 </body>
 </html>
+
